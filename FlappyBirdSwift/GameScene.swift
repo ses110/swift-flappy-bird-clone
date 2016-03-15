@@ -15,6 +15,8 @@ class GameScene: SKScene {
     var pipeDownTexture = SKTexture()
     var PipesMoveAndRemove = SKAction()
     
+    let pipeGap = 150.0
+    
     override func didMoveToView(view: SKView) {
         
         //Physics
@@ -64,8 +66,53 @@ class GameScene: SKScene {
         let movePipes = SKAction.moveByX(-distanceToMove, y: 0.0, duration: NSTimeInterval(0.01 * distanceToMove))
         let removePipes = SKAction.removeFromParent()
         
-        PipesMoveAndRemove = SKAction.sequence([movePipes.removePipes])
+        PipesMoveAndRemove = SKAction.sequence([movePipes, removePipes])
         
+        
+        //Spawn pipes
+        
+        let spawn = SKAction.runBlock({() in self.spawnPipes()})
+        let delay = SKAction.waitForDuration(NSTimeInterval(2.0))
+        let spawnThenDelay = SKAction.sequence([spawn, delay])
+        let spawnThenDelayForever = SKAction.repeatActionForever(spawnThenDelay)
+        
+        self.runAction(spawnThenDelayForever)
+        
+        
+        
+    }
+    
+    func spawnPipes() {
+        let pipePair = SKNode()
+        pipePair.position = CGPointMake(self.frame.size.width + pipeUpTexture.size().width * 2, 0)
+        
+        pipePair.zPosition = -10
+        
+        let height = UInt32(self.frame.size.height / 4)
+        let y = arc4random() % height + height
+        
+        let pipeDown = SKSpriteNode(texture: pipeDownTexture)
+        pipeDown.setScale(2.0)
+        pipeDown.position = CGPointMake(0.0, CGFloat(y) + pipeDown.size.height + CGFloat(pipeGap))
+        
+        pipeDown.physicsBody = SKPhysicsBody(rectangleOfSize: pipeDown.size)
+        pipeDown.physicsBody?.dynamic = false
+        
+        pipePair.addChild(pipeDown)
+        
+        
+        let pipeUp = SKSpriteNode(texture: pipeUpTexture)
+        pipeUp.setScale(2.0)
+        pipeUp.position = CGPointMake(0.0, CGFloat(y))
+        
+        pipeUp.physicsBody = SKPhysicsBody(rectangleOfSize: pipeUp.size)
+        pipeUp.physicsBody?.dynamic = false
+        
+        pipePair.addChild(pipeUp)
+        
+        
+        pipePair.runAction(PipesMoveAndRemove)
+        self.addChild(pipePair)
         
     }
     
